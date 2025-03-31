@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembuat Tautan Pendek</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        label, input, button { display: block; margin-bottom: 10px; }
+        input[type="text"], input[type="url"] { width: 90%; max-width: 400px; padding: 8px; }
+        #result { margin-top: 20px; background-color: #f0f0f0; padding: 15px; border-radius: 5px; word-wrap: break-word; }
+        #json-output { font-family: monospace; background-color: #e0e0e0; padding: 10px; border-radius: 3px; white-space: pre; }
+        .warning { color: #8B4513; /* SaddleBrown */ font-style: italic; border: 1px solid #ccc; padding: 10px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Pembuat Tautan Pendek (Bantuan)</h1>
+    <p>Gunakan formulir ini untuk membuat kode pendek dan entri JSON yang sesuai. Anda kemudian harus <strong>secara manual</strong> menambahkan entri JSON ke file <code>links.json</code> di repositori GitHub Anda dan push perubahannya.</p>
+
+    <label for="longUrl">URL Panjang:</label>
+    <input type="url" id="longUrl" placeholder="https://contoh-url-panjang-anda.com/..." required>
+
+    <label for="shortCode">Kode Pendek (opsional, biarkan kosong untuk acak):</label>
+    <input type="text" id="shortCode" placeholder="mis: blog-baru">
+
+    <button onclick="generateLink()">Buat Entri</button>
+
+    <div id="result" style="display: none;">
+        <h2>Hasil:</h2>
+        <p><strong>Tautan Pendek yang Dihasilkan:</strong> <span id="shortUrl"></span></p>
+        <p><strong>Tambahkan baris ini ke file <code>links.json</code> Anda (di dalam kurung kurawal <code>{}</code>):</strong></p>
+        <pre><code id="json-output"></code></pre>
+        <p class="warning">
+            <strong>Penting:</strong> Salin teks di atas, buka file <code>links.json</code> di repositori Anda, tambahkan baris tersebut (pastikan format JSON tetap valid, mungkin perlu menambahkan koma <code>,</code> di baris sebelumnya jika bukan entri pertama/terakhir), lalu commit dan push perubahan ke GitHub. Tautan pendek baru akan aktif setelah perubahan di-deploy oleh GitHub Pages (biasanya beberapa menit).
+        </p>
+    </div>
+
+    <script>
+        // Fungsi untuk menghasilkan string acak sederhana
+        function generateRandomString(length = 6) {
+            const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        function generateLink() {
+            const longUrlInput = document.getElementById('longUrl');
+            const shortCodeInput = document.getElementById('shortCode');
+            const resultDiv = document.getElementById('result');
+            const shortUrlSpan = document.getElementById('shortUrl');
+            const jsonOutputCode = document.getElementById('json-output');
+
+            const longUrl = longUrlInput.value.trim();
+            let shortCode = shortCodeInput.value.trim();
+
+            if (!longUrl) {
+                alert('URL Panjang tidak boleh kosong!');
+                return;
+            }
+
+            // Coba validasi URL sederhana
+            try {
+                new URL(longUrl);
+            } catch (_) {
+                alert('Masukkan URL yang valid (misalnya, diawali dengan http:// atau https://)');
+                return;
+            }
+
+            if (!shortCode) {
+                shortCode = generateRandomString();
+            } else {
+                // Sanitasi sederhana untuk kode pendek (hanya huruf, angka, tanda hubung)
+                shortCode = shortCode.replace(/[^a-zA-Z0-9-]/g, '');
+                if (!shortCode) {
+                    alert('Kode Pendek tidak valid setelah sanitasi. Gunakan huruf, angka, atau tanda hubung (-).');
+                    shortCode = generateRandomString(); // fallback ke acak
+                    shortCodeInput.value = shortCode; // update input field
+                }
+            }
+
+            // Dapatkan base URL GitHub Pages (perlu disesuaikan!)
+            // Asumsi format: https://USERNAME.github.io/REPO_NAME/
+            // Ganti 'USERNAME' dan 'REPO_NAME' dengan milik Anda!
+            const githubUsername = "USERNAME"; // <-- GANTI INI
+            const githubRepoName = "REPO_NAME"; // <-- GANTI INI
+            const baseUrl = `https://${githubUsername}.github.io/${githubRepoName}/`;
+
+            const finalShortUrl = baseUrl + shortCode;
+            const jsonEntry = `  "${shortCode}": "${longUrl}"`; // Tambahkan indentasi untuk kerapian
+
+            shortUrlSpan.textContent = finalShortUrl;
+            shortUrlSpan.innerHTML = `<a href="${finalShortUrl}" target="_blank">${finalShortUrl}</a> (Belum Aktif!)`;
+            jsonOutputCode.textContent = jsonEntry;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

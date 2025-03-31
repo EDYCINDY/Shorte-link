@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mengalihkan...</title>
+    <!-- Opsional: Refresh meta tag sebagai fallback jika JS gagal -->
+    <!-- <meta http-equiv="refresh" content="0; url=/"> -->
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <p id="message">Mencari tautan pendek...</p>
+
+    <script>
+        (function() {
+            const messageElement = document.getElementById('message');
+            const repoBasePath = "/REPO_NAME/"; // <-- GANTI REPO_NAME! Harus diawali dan diakhiri /
+
+            // Dapatkan path yang diminta, misal: /REPO_NAME/shortcode
+            const requestedPath = window.location.pathname;
+            let shortCode = '';
+
+            // Ekstrak kode pendek dari path
+            if (requestedPath.startsWith(repoBasePath) && requestedPath.length > repoBasePath.length) {
+                shortCode = requestedPath.substring(repoBasePath.length);
+                // Hapus trailing slash jika ada
+                if (shortCode.endsWith('/')) {
+                    shortCode = shortCode.slice(0, -1);
+                }
+            }
+
+            console.log("Path diminta:", requestedPath);
+            console.log("Kode pendek terdeteksi:", shortCode);
+
+            if (!shortCode) {
+                messageElement.textContent = 'Kode pendek tidak ditemukan di URL.';
+                // Mungkin arahkan ke halaman utama setelah beberapa detik
+                // window.setTimeout(() => { window.location.href = '/REPO_NAME/'; }, 3000);
+                return;
+            }
+
+            // Ambil file links.json
+            // Penting: Path ke links.json harus benar relatif terhadap root domain GitHub Pages Anda
+            const linksJsonPath = `${repoBasePath}links.json`;
+
+            fetch(linksJsonPath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Gagal memuat links.json: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(links => {
+                    console.log("Data tautan dimuat:", links);
+                    if (links && links[shortCode]) {
+                        const longUrl = links[shortCode];
+                        messageElement.textContent = `Mengalihkan ke: ${longUrl}`;
+                        console.log(`Mengalihkan ${shortCode} ke ${longUrl}`);
+                        // Gunakan replace agar halaman ini tidak masuk ke history browser
+                        window.location.replace(longUrl);
+                    } else {
+                        messageElement.textContent = `Kode pendek "${shortCode}" tidak ditemukan.`;
+                        messageElement.classList.add('error');
+                        console.warn(`Kode pendek "${shortCode}" tidak ada di links.json`);
+                        // Mungkin arahkan ke halaman utama
+                        // window.setTimeout(() => { window.location.href = repoBasePath; }, 5000);
+                    }
+                })
+                .catch(error => {
+                    messageElement.textContent = `Terjadi kesalahan: ${error.message}`;
+                    messageElement.classList.add('error');
+                    console.error("Error saat mengambil atau memproses links.json:", error);
+                });
+        })();
+    </script>
+</body>
+</html>
