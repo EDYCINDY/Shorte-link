@@ -48,7 +48,7 @@
             // Asumsi format: https://USERNAME.github.io/REPO_NAME/
             // Ganti 'USERNAME' dan 'REPO_NAME' dengan milik Anda!
             const githubUsername = "edycindy"; // <-- GANTI INI
-            const githubRepoName = "Shorte-link"; // <-- GANTI INI
+            const githubRepoName = "Slink"; // <-- GANTI INI
             const baseUrl = `https://${githubUsername}.github.io/${githubRepoName}/`;
 
             const finalShortUrl = baseUrl + shortCode;
